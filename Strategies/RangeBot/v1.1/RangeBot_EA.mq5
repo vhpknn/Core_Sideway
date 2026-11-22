@@ -36,6 +36,8 @@
 #include "include/RangeBot_Inputs.mqh"
 #include "include/RangeBot_Regime.mqh"
 #include "include/RangeBot_Range.mqh"
+#include "include/RangeBot_Signals.mqh"
+#include "include/RangeBot_Manager.mqh"
 #include "include/RangeBot_Strategy.mqh"
 
 //--- Panel: ใช้ของ Core หรือสำเนาเฉพาะกลยุทธ์ (D-14) ถ้า define STRATEGY_OWN_PANEL

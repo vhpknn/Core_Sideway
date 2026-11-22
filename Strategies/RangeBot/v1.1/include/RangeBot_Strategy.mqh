@@ -117,6 +117,7 @@ datetime g_rbLastBar = 0;   // เวลาเปิดของแท่ง Ent
 
 void RbOnDeinit()
   {
+   RbSignalsDeinit();
    RbRegimeDeinit();
    RbRangeDeinit();
   }
@@ -148,6 +149,8 @@ void RbLogBar()
 //--- ชุด 2: อัปเดต Regime + Range เมื่อเกิดแท่งใหม่ ยังไม่มีการเปิดไม้
 void RbOnTick()
   {
+   RbEnsureSlTp();   // ตั้ง SL/TP ที่ยังค้างอยู่ (ถ้ามี)
+
    datetime bar = iTime(_Symbol, InpRbEntryTF, 0);
 
    if(bar > 0 && (bar != g_rbLastBar || g_rbForceUpdate))
@@ -158,6 +161,7 @@ void RbOnTick()
          g_rbForceUpdate = false;
          RbDrawRange();
          RbLogBar();
+         RbEvaluateSignal();
         }
       else
         {
@@ -171,7 +175,9 @@ void RbOnTick()
         }
      }
 
-   g_gateReason = RbRegimeText(g_rbRegime) + (g_rbRange.valid ? " BOX" : " NOBOX");
+   RbTryExecuteSignal();
+
+   g_gateReason = RbGateText();
   }
 
 bool Strategy_Init()
@@ -182,11 +188,15 @@ bool Strategy_Init()
    if(!RbValidateInputs())
       return(false);
 
-   if(!RbRegimeInit() || !RbRangeInit())
+   if(!RbValidateSignalInputs())
+      return(false);
+
+   if(!RbRegimeInit() || !RbRangeInit() || !RbSignalsInit())
       return(false);
 
    g_rbLastBar     = 0;
    g_rbForceUpdate = false;
+   RbManagerReset();
 
    Print(CORE_LOG_PREFIX, " Protect ของ Core ถูกปิดตามที่ RangeBot ต้องการ",
          " | CutLoss=", InpCutLossPoints, " pts",
@@ -221,8 +231,8 @@ bool Strategy_ButtonDef(int index, SStrategyButton &def)
      {
       def.id        = "RANGE_RESET";
       def.text      = "RESET RANGE";
-      def.bg        = CUI_BTN_REFILL;
-      def.border    = CUI_BORDER;
+      def.bg        = C'0,130,150';
+      def.border    = C'0,190,215';
       def.tooltip   = "Unlock the saved range and detect a new one. Does not close trades and does not touch capital (different from the Core RESET button).";
       def.textColor = CLR_NONE;
       return(true);

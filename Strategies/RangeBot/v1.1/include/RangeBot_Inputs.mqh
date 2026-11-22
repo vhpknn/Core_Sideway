@@ -92,4 +92,140 @@ input double InpRbRangeTouchTolAtr   = 0.25;      // ระยะที่นั
 input bool   InpRbUseRangeLock       = true;      // ล็อกขอบกรอบไว้จนกว่าจะเบรกหรือหมดอายุ
 #endif
 
+//--- ทิศทาง / ชนิดจุดเข้า / Trigger
+#ifdef INPUT_LANG_EN
+enum ENUM_RB_DIRECTION
+  {
+   RB_DIR_FOLLOW_HTF = 0,   // FOLLOW_HTF (trade with the higher-timeframe bias only)
+   RB_DIR_BOTH_EDGES = 1    // BOTH_EDGES (buy at the low edge, sell at the high edge)
+  };
+enum ENUM_RB_ENTRY_TYPE
+  {
+   RB_ENTRY_ZONE  = 0,      // ZONE
+   RB_ENTRY_SWEEP = 1,      // SWEEP
+   RB_ENTRY_BOTH  = 2       // BOTH (SWEEP wins when both appear)
+  };
+enum ENUM_RB_TRIGGER
+  {
+   RB_TRIG_RSI    = 0,      // RSI
+   RB_TRIG_STOCH  = 1,      // STOCH
+   RB_TRIG_CANDLE = 2,      // CANDLE (pin bar / engulfing)
+   RB_TRIG_NONE   = 3       // NONE
+  };
+#else
+enum ENUM_RB_DIRECTION
+  {
+   RB_DIR_FOLLOW_HTF = 0,   // ตามทิศ HTF เท่านั้น
+   RB_DIR_BOTH_EDGES = 1    // ทั้งสองขอบ (Buy ขอบล่าง Sell ขอบบน)
+  };
+enum ENUM_RB_ENTRY_TYPE
+  {
+   RB_ENTRY_ZONE  = 0,      // ZONE (โซนขอบกรอบ)
+   RB_ENTRY_SWEEP = 1,      // SWEEP (แทงไส้ออกนอกแล้วปิดกลับ)
+   RB_ENTRY_BOTH  = 2       // BOTH (ถ้าเกิดทั้งคู่ใช้ SWEEP)
+  };
+enum ENUM_RB_TRIGGER
+  {
+   RB_TRIG_RSI    = 0,      // RSI
+   RB_TRIG_STOCH  = 1,      // STOCH
+   RB_TRIG_CANDLE = 2,      // CANDLE (Pin Bar / Engulfing)
+   RB_TRIG_NONE   = 3       // ไม่ใช้ Trigger
+  };
+#endif
+
+input group "=== R4. Direction (HTF) ==="
+#ifdef INPUT_LANG_EN
+input ENUM_RB_DIRECTION InpRbRangeDirection = RB_DIR_FOLLOW_HTF;   // InpRbRangeDirection - Which edges may be traded
+input ENUM_TIMEFRAMES InpRbHigherTF = PERIOD_H4;   // InpRbHigherTF - Higher timeframe for the bias
+input int    InpRbHtfEma            = 200;         // InpRbHtfEma - EMA period on the higher timeframe
+input double InpRbHtfBufferAtr      = 0.25;        // InpRbHtfBufferAtr - Price closer to the EMA than this (x HTF ATR) = no bias
+#else
+input ENUM_RB_DIRECTION InpRbRangeDirection = RB_DIR_FOLLOW_HTF;   // ขอบที่อนุญาตให้เทรด
+input ENUM_TIMEFRAMES InpRbHigherTF = PERIOD_H4;   // ไทม์เฟรมใหญ่ที่ใช้หาทิศ
+input int    InpRbHtfEma            = 200;         // ช่วง EMA บนไทม์เฟรมใหญ่
+input double InpRbHtfBufferAtr      = 0.25;        // ราคาห่าง EMA ไม่ถึงค่านี้ (เท่าของ ATR ไทม์เฟรมใหญ่) ถือว่าไม่มีทิศ
+#endif
+
+input group "=== R5. Entry ==="
+#ifdef INPUT_LANG_EN
+input ENUM_RB_ENTRY_TYPE InpRbEntryType = RB_ENTRY_BOTH;   // InpRbEntryType - Entry method
+input double InpRbZoneEntryPct      = 25.0;        // InpRbZoneEntryPct - ZONE depth (% of range height from the edge)
+input double InpRbSweepMinAtr       = 0.1;         // InpRbSweepMinAtr - SWEEP: minimum wick beyond the edge (x ATR)
+input double InpRbSweepMaxAtr       = 1.0;         // InpRbSweepMaxAtr - SWEEP: deeper than this is a real break (x ATR)
+input double InpRbSweepMinWickRatio = 1.5;         // InpRbSweepMinWickRatio - SWEEP: wick length / candle body
+input bool   InpRbSweepRequireTrigger = false;     // InpRbSweepRequireTrigger - SWEEP also needs the trigger
+#else
+input ENUM_RB_ENTRY_TYPE InpRbEntryType = RB_ENTRY_BOTH;   // วิธีเข้า
+input double InpRbZoneEntryPct      = 25.0;        // ความลึกโซน ZONE (% ของความสูงกรอบนับจากขอบ)
+input double InpRbSweepMinAtr       = 0.1;         // SWEEP: ไส้ต้องแทงออกนอกขอบอย่างน้อย (เท่าของ ATR)
+input double InpRbSweepMaxAtr       = 1.0;         // SWEEP: ลึกกว่านี้ถือเป็นการเบรกจริง ไม่เข้า (เท่าของ ATR)
+input double InpRbSweepMinWickRatio = 1.5;         // SWEEP: ความยาวไส้ / เนื้อเทียน
+input bool   InpRbSweepRequireTrigger = false;     // SWEEP ต้องมี Trigger ยืนยันด้วย
+#endif
+
+input group "=== R6. Trigger ==="
+#ifdef INPUT_LANG_EN
+input ENUM_RB_TRIGGER InpRbTriggerType = RB_TRIG_RSI;   // InpRbTriggerType - Confirmation trigger
+input int    InpRbRsiPeriod         = 14;          // InpRbRsiPeriod - RSI period
+input double InpRbRsiBuy            = 35.0;        // InpRbRsiBuy - RSI at or below this (bars 2-4) then turning up = buy trigger
+input double InpRbRsiSell           = 65.0;        // InpRbRsiSell - RSI at or above this (bars 2-4) then turning down = sell trigger
+input int    InpRbStochK            = 14;          // InpRbStochK - Stochastic %K
+input int    InpRbStochD            = 3;           // InpRbStochD - Stochastic %D
+input int    InpRbStochSlow         = 3;           // InpRbStochSlow - Stochastic slowing
+input double InpRbStochLow          = 20.0;        // InpRbStochLow - Oversold level
+input double InpRbStochHigh         = 80.0;        // InpRbStochHigh - Overbought level
+input double InpRbCandlePinWickRatio = 2.0;        // InpRbCandlePinWickRatio - Pin bar: wick >= this x body
+input bool   InpRbCandleUseEngulfing = true;       // InpRbCandleUseEngulfing - Also accept engulfing candles
+#else
+input ENUM_RB_TRIGGER InpRbTriggerType = RB_TRIG_RSI;   // Trigger ยืนยันจุดเข้า
+input int    InpRbRsiPeriod         = 14;          // ช่วง RSI
+input double InpRbRsiBuy            = 35.0;        // RSI (แท่ง 2-4) ต่ำกว่าหรือเท่ากับค่านี้แล้วเริ่มขึ้น = Trigger ฝั่ง Buy
+input double InpRbRsiSell           = 65.0;        // RSI (แท่ง 2-4) สูงกว่าหรือเท่ากับค่านี้แล้วเริ่มลง = Trigger ฝั่ง Sell
+input int    InpRbStochK            = 14;          // Stochastic %K
+input int    InpRbStochD            = 3;           // Stochastic %D
+input int    InpRbStochSlow         = 3;           // Stochastic slowing
+input double InpRbStochLow          = 20.0;        // ระดับ Oversold
+input double InpRbStochHigh         = 80.0;        // ระดับ Overbought
+input double InpRbCandlePinWickRatio = 2.0;        // Pin Bar: ไส้ >= ค่านี้ x เนื้อเทียน
+input bool   InpRbCandleUseEngulfing = true;       // รับ Engulfing ด้วย
+#endif
+
+input group "=== R7. Filters ==="
+#ifdef INPUT_LANG_EN
+input bool   InpRbUseAdxSlope       = true;        // InpRbUseAdxSlope - Skip when ADX is rising
+input int    InpRbAdxSlopeBars      = 3;           // InpRbAdxSlopeBars - Bars used to measure the ADX slope
+input bool   InpRbUsePercentB       = false;       // InpRbUsePercentB - ZONE needs Bollinger %B at an extreme
+input double InpRbPercentBBuy       = 0.10;        // InpRbPercentBBuy - Buy needs %B at or below this
+input double InpRbPercentBSell      = 0.90;        // InpRbPercentBSell - Sell needs %B at or above this
+input bool   InpRbUseAtrVolFilter   = true;        // InpRbUseAtrVolFilter - ATR / average ATR must be inside the band
+input int    InpRbAtrVolAvgPeriod   = 100;         // InpRbAtrVolAvgPeriod - Bars for average ATR
+input double InpRbAtrVolMin         = 0.5;         // InpRbAtrVolMin - Minimum ATR ratio
+input double InpRbAtrVolMax         = 2.5;         // InpRbAtrVolMax - Maximum ATR ratio
+#else
+input bool   InpRbUseAdxSlope       = true;        // ข้ามเมื่อ ADX กำลังชันขึ้น
+input int    InpRbAdxSlopeBars      = 3;           // จำนวนแท่งที่ใช้วัดความชัน ADX
+input bool   InpRbUsePercentB       = false;       // ZONE ต้องมี Bollinger %B อยู่ที่ขั้ว
+input double InpRbPercentBBuy       = 0.10;        // Buy ต้องมี %B ไม่เกินค่านี้
+input double InpRbPercentBSell      = 0.90;        // Sell ต้องมี %B ตั้งแต่ค่านี้ขึ้นไป
+input bool   InpRbUseAtrVolFilter   = true;        // อัตรา ATR / ATR เฉลี่ย ต้องอยู่ในช่วงที่กำหนด
+input int    InpRbAtrVolAvgPeriod   = 100;         // จำนวนแท่งที่ใช้เฉลี่ย ATR
+input double InpRbAtrVolMin         = 0.5;         // อัตรา ATR ต่ำสุด
+input double InpRbAtrVolMax         = 2.5;         // อัตรา ATR สูงสุด
+#endif
+
+input group "=== R8. SL / TP ==="
+#ifdef INPUT_LANG_EN
+input double InpRbZoneSlAtr         = 1.0;         // InpRbZoneSlAtr - ZONE: SL distance beyond the edge (x ATR)
+input double InpRbSweepSlAtr        = 0.3;         // InpRbSweepSlAtr - SWEEP: SL distance beyond the wick tip (x ATR)
+input double InpRbTp1BufferAtr      = 0.1;         // InpRbTp1BufferAtr - TP1 sits this far before the opposite edge (x ATR)
+input bool   InpRbUseTp2            = true;        // InpRbUseTp2 - Broker TP = TP2 (opposite edge + range height); off = TP1
+input double InpRbMinRrTp1          = 1.2;         // InpRbMinRrTp1 - Minimum reward/risk to TP1
+#else
+input double InpRbZoneSlAtr         = 1.0;         // ZONE: ระยะ SL นอกขอบ (เท่าของ ATR)
+input double InpRbSweepSlAtr        = 0.3;         // SWEEP: ระยะ SL นอกปลายไส้ (เท่าของ ATR)
+input double InpRbTp1BufferAtr      = 0.1;         // TP1 อยู่ก่อนถึงขอบตรงข้ามเท่านี้ (เท่าของ ATR)
+input bool   InpRbUseTp2            = true;        // TP ของโบรก = TP2 (ขอบตรงข้าม + ความสูงกรอบ) ถ้าปิดจะใช้ TP1
+input double InpRbMinRrTp1          = 1.2;         // อัตรากำไรต่อความเสี่ยงขั้นต่ำจนถึง TP1
+#endif
+
 #endif // RANGEBOT_INPUTS_MQH
