@@ -1,0 +1,10 @@
+name=RangeBot
+tag=RNG
+ordinal=4
+magic_base=40000
+magic_next=40001
+default_comment=RNG40000 H1 base
+strategy_folder=Strategies/RangeBot
+created=2026-11-22
+template_version=0.1.1
+core_version=v1.1

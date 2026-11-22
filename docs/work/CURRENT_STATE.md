@@ -1,9 +1,9 @@
-# CURRENT STATE: {{NAME}}
-อัปเดต: {{DATE}}
+# CURRENT STATE: RangeBot
+อัปเดต: 2026-11-22
 Commit ที่ Push แล้ว: ยังไม่มี
 
 ## ตัวตนกลยุทธ์
-ชื่อ {{NAME}} | TAG {{TAG}} | ลำดับ EA {{ORDINAL}} | Magic ฐาน {{MAGIC_BASE}}
+ชื่อ RangeBot | TAG RNG | ลำดับ EA 4 | Magic ฐาน 40000
 Core ฐาน: ดู `Core/v*/PINNED_FROM.txt`
 
 ## เฟสปัจจุบัน

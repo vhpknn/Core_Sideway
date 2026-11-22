@@ -1,16 +1,16 @@
 //+------------------------------------------------------------------+
-//|                                            Template_Strategy.mqh |
+//|                                            RangeBot_Strategy.mqh |
 //|  โครงเปล่าของกลยุทธ์: ฟังก์ชัน Strategy_* ตามสัญญา Core_StrategyAPI |
 //|  ไม่มีตรรกะเทรด Strategy_OnTick แค่แสดงสถานะ NO_STRATEGY           |
 //|  ต้อง include หลัง Core ทั้งหมด และ CoreUI_Theme.mqh               |
 //|  ตัวอย่างตรรกะจริงดู reference/Hedge_example/include/Hedge_Strategy.mqh |
 //+------------------------------------------------------------------+
-#ifndef TEMPLATE_STRATEGY_MQH
-#define TEMPLATE_STRATEGY_MQH
+#ifndef RANGEBOT_STRATEGY_MQH
+#define RANGEBOT_STRATEGY_MQH
 
 string Strategy_Title()
   {
-   return("Template 1.0");
+   return("RangeBot 1.0");
   }
 
 string Strategy_Version()
@@ -61,4 +61,4 @@ string Strategy_GateText()
    return(GetEngineGateText());
   }
 
-#endif // TEMPLATE_STRATEGY_MQH
+#endif // RANGEBOT_STRATEGY_MQH

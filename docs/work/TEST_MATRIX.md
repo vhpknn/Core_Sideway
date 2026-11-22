@@ -1,4 +1,4 @@
-# TEST MATRIX: {{NAME}}
+# TEST MATRIX: RangeBot
 
 สถานะ: PASS (มี Log/ภาพ) | PASS* (รายงานข้อความ) | BLOCKED | ยังไม่ทดสอบ
 
