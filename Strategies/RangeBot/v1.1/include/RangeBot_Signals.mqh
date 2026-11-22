@@ -23,6 +23,10 @@ struct SRbSignal
    double             tp1;
    double             tp2;
    double             tpBroker;   // TP ที่ตั้งกับโบรก
+   double             rHigh;      // ขอบกรอบตอนเกิดสัญญาณ
+   double             rLow;
+   double             atr;        // ATR ตอนเกิดสัญญาณ
+   datetime           created;    // เวลาที่เกิดสัญญาณ (ใช้ตัดสินหมดอายุ)
   };
 
 SRbSignal g_rbSig;
@@ -414,6 +418,10 @@ void RbBuildSignal(const ENUM_POSITION_TYPE dir, const string kind)
    g_rbSig.tp1      = NormalizeDouble(tp1, _Digits);
    g_rbSig.tp2      = NormalizeDouble(tp2, _Digits);
    g_rbSig.tpBroker = InpRbUseTp2 ? g_rbSig.tp2 : g_rbSig.tp1;
+   g_rbSig.rHigh    = hi;
+   g_rbSig.rLow     = lo;
+   g_rbSig.atr      = atr;
+   g_rbSig.created  = TimeCurrent();
    g_rbLastWhyLogged = "";
 
    Print(CORE_LOG_PREFIX, " SIGNAL ", (dir == POSITION_TYPE_BUY ? "BUY " : "SELL "), kind,

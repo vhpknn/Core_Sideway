@@ -117,6 +117,7 @@ datetime g_rbLastBar = 0;   // เวลาเปิดของแท่ง Ent
 
 void RbOnDeinit()
   {
+   RbTradeDeinit();
    RbSignalsDeinit();
    RbRegimeDeinit();
    RbRangeDeinit();
@@ -150,17 +151,24 @@ void RbLogBar()
 void RbOnTick()
   {
    RbEnsureSlTp();   // ตั้ง SL/TP ที่ยังค้างอยู่ (ถ้ามี)
+   RbManageTick();   // Mid-range BE และ TP1 (ทุก Tick)
 
    datetime bar = iTime(_Symbol, InpRbEntryTF, 0);
 
    if(bar > 0 && (bar != g_rbLastBar || g_rbForceUpdate))
      {
+      bool isNewBar = (bar != g_rbLastBar);   // RESET RANGE ไม่นับเป็นแท่งใหม่
+
       if(RbRegimeUpdate() && RbRangeUpdate(g_rbRegime))
         {
          g_rbLastBar     = bar;
          g_rbForceUpdate = false;
          RbDrawRange();
          RbLogBar();
+
+         if(isNewBar)
+            RbManageOnNewBar();
+
          RbEvaluateSignal();
         }
       else
@@ -188,15 +196,16 @@ bool Strategy_Init()
    if(!RbValidateInputs())
       return(false);
 
-   if(!RbValidateSignalInputs())
+   if(!RbValidateSignalInputs() || !RbValidateTradeInputs())
       return(false);
 
-   if(!RbRegimeInit() || !RbRangeInit() || !RbSignalsInit())
+   if(!RbRegimeInit() || !RbRangeInit() || !RbSignalsInit() || !RbTradeInit())
       return(false);
 
    g_rbLastBar     = 0;
    g_rbForceUpdate = false;
    RbManagerReset();
+   RbManagerRestore();
 
    Print(CORE_LOG_PREFIX, " Protect ของ Core ถูกปิดตามที่ RangeBot ต้องการ",
          " | CutLoss=", InpCutLossPoints, " pts",
@@ -258,7 +267,7 @@ void Strategy_OnButton(string id)
    if(id == "RANGE_RESET")
       RbRangeResetRequest();
    else if(id == "BE_NOW")
-      Print(CORE_LOG_PREFIX, " ปุ่ม BE NOW ถูกกด (ยังไม่ทำงานจริงในชุด 1)");
+      RbBeNow();
   }
 
 string Strategy_GateText()

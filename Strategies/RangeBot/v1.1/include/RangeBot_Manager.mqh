@@ -21,18 +21,42 @@ struct SRbPlan
    double             tpBroker;
    int                tries;
    bool               applied;   // ตั้ง SL/TP กับโบรกสำเร็จแล้ว
+   int                state;     // RB_ST_PRE_TP1 / POST_TP1 / HANDED_OFF
+   double             entry;     // ราคาเปิดจริง
+   double             atr;       // ATR ตอนเข้า
+   double             rHigh;     // ขอบกรอบตอนเข้า
+   double             rLow;
+   int                barsHeld;
+   int                barsSinceTp1;
+   bool               midDone;
+   bool               trendDone;
   };
+
+//--- ประกาศล่วงหน้า (นิยามอยู่ใน RangeBot_Trade.mqh)
+void   RbPlanOnOpened();
+void   RbPlanOnClosed();
+void   RbPlanPersist();
+string RbStateTag();
 
 SRbPlan  g_rbPlan;
 datetime g_rbLastOpenFail = 0;
 
 void RbManagerReset()
   {
-   g_rbPlan.active   = false;
-   g_rbPlan.ticket   = 0;
-   g_rbPlan.tries    = 0;
-   g_rbPlan.applied  = false;
-   g_rbLastOpenFail  = 0;
+   g_rbPlan.active       = false;
+   g_rbPlan.ticket       = 0;
+   g_rbPlan.tries        = 0;
+   g_rbPlan.applied      = false;
+   g_rbPlan.state        = 1;
+   g_rbPlan.entry        = 0.0;
+   g_rbPlan.atr          = 0.0;
+   g_rbPlan.rHigh        = 0.0;
+   g_rbPlan.rLow         = 0.0;
+   g_rbPlan.barsHeld     = 0;
+   g_rbPlan.barsSinceTp1 = 0;
+   g_rbPlan.midDone      = false;
+   g_rbPlan.trendDone    = false;
+   g_rbLastOpenFail      = 0;
   }
 
 ulong RbFindPositionTicket(const ENUM_POSITION_TYPE dir)
@@ -73,7 +97,7 @@ void RbEnsureSlTp()
 
    if(!PositionSelectByTicket(g_rbPlan.ticket))
      {
-      g_rbPlan.active = false;   // ไม้ปิดไปแล้ว
+      RbPlanOnClosed();   // ไม้ปิดไปแล้ว: ล้างสถานะ
       return;
      }
 
@@ -94,6 +118,7 @@ void RbEnsureSlTp()
    if(ModifySL(g_rbPlan.ticket, g_rbPlan.sl, g_rbPlan.tpBroker, "RB-SLTP"))
      {
       g_rbPlan.applied = true;
+      RbPlanPersist();
       Print(CORE_LOG_PREFIX, " SL/TP SET #", g_rbPlan.ticket,
             " | SL=", DoubleToString(g_rbPlan.sl, _Digits),
             " TP=", DoubleToString(g_rbPlan.tpBroker, _Digits));
@@ -119,10 +144,18 @@ bool RbStopsOk(const ENUM_POSITION_TYPE dir, const double sl, const double tp)
 
 void RbSigLogWhy(const string why)
   {
+   static datetime lastPrint = 0;
+
    if(why == g_rbLastWhyLogged)
       return;
 
    g_rbLastWhyLogged = why;
+
+   //--- เหตุผลสลับถี่ตามราคา: พิมพ์ไม่เกิน 1 บรรทัดต่อ 60 วินาที
+   if(lastPrint > 0 && TimeCurrent() - lastPrint < 60)
+      return;
+
+   lastPrint = TimeCurrent();
    Print(CORE_LOG_PREFIX, " SIGNAL WAIT | ", why);
   }
 
@@ -131,6 +164,16 @@ void RbTryExecuteSignal()
   {
    if(!g_rbSig.active)
       return;
+
+   //--- สัญญาณหมดอายุเมื่อรอเกิน InpRbSignalWaitMinutes
+   if(InpRbSignalWaitMinutes > 0
+      && (long)(TimeCurrent() - g_rbSig.created) > (long)InpRbSignalWaitMinutes * 60)
+     {
+      Print(CORE_LOG_PREFIX, " SIGNAL EXPIRED | รอเกิน ", InpRbSignalWaitMinutes,
+            " นาที | เหตุผลล่าสุด=", (g_rbLastWhyLogged == "" ? "-" : g_rbLastWhyLogged));
+      g_rbSig.active = false;
+      return;
+     }
 
    if(CoreBasketPositions() > 0 || g_rbPlan.active)
      {
@@ -250,6 +293,11 @@ void RbTryExecuteSignal()
    g_rbPlan.tpBroker = g_rbSig.tpBroker;
    g_rbPlan.tries    = 0;
    g_rbPlan.applied  = false;
+   g_rbPlan.entry    = (PositionSelectByTicket(ticket) ? PositionGetDouble(POSITION_PRICE_OPEN) : entry);
+   g_rbPlan.atr      = g_rbSig.atr;
+   g_rbPlan.rHigh    = g_rbSig.rHigh;
+   g_rbPlan.rLow     = g_rbSig.rLow;
+   RbPlanOnOpened();
 
    Print(CORE_LOG_PREFIX, " ENTRY ", (buy ? "BUY " : "SELL "), g_rbSig.kind,
          " #", ticket, " | Lot=", DoubleToString(lot, 2),
@@ -270,7 +318,7 @@ string RbGateText()
    string g = RbRegimeText(g_rbRegime) + (g_rbRange.valid ? " BOX" : " NOBOX");
 
    if(CoreBasketPositions() > 0)
-      return(g + " IN_TRADE");
+      return(g + " IN_TRADE" + RbStateTag());
 
    if(g_rbSig.active)
       return("SIG_" + (g_rbSig.dir == POSITION_TYPE_BUY ? "BUY" : "SELL")

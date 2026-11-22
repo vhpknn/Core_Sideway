@@ -228,4 +228,54 @@ input bool   InpRbUseTp2            = true;        // TP ของโบรก =
 input double InpRbMinRrTp1          = 1.2;         // อัตรากำไรต่อความเสี่ยงขั้นต่ำจนถึง TP1
 #endif
 
+//--- สิ่งที่ทำกับไม้ที่ยังไม่ถึง TP1 เมื่อตลาดเปลี่ยนเป็น TREND
+#ifdef INPUT_LANG_EN
+enum ENUM_RB_TREND_SHIFT
+  {
+   RB_TS_KEEP    = 0,   // KEEP (do nothing)
+   RB_TS_TIGHTEN = 1,   // TIGHTEN (SL to last low/high -/+ 0.3 ATR if better)
+   RB_TS_CLOSE   = 2    // CLOSE (close the trade)
+  };
+#else
+enum ENUM_RB_TREND_SHIFT
+  {
+   RB_TS_KEEP    = 0,   // KEEP (ไม่ทำอะไร)
+   RB_TS_TIGHTEN = 1,   // TIGHTEN (เลื่อน SL มาที่ Low/High ล่าสุด -/+ 0.3 ATR ถ้าดีกว่าเดิม)
+   RB_TS_CLOSE   = 2    // CLOSE (ปิดไม้)
+  };
+#endif
+
+input group "=== R9. Management ==="
+#ifdef INPUT_LANG_EN
+input int    InpRbSignalWaitMinutes = 15;          // InpRbSignalWaitMinutes - A signal expires after this many minutes (0 = wait until the bar ends)
+input double InpRbBeBufferAtr       = 0.1;         // InpRbBeBufferAtr - Break-even SL sits this far beyond the entry (x ATR at entry)
+input bool   InpRbUseMidRangeBe     = false;       // InpRbUseMidRangeBe - Move SL to break-even when price passes the middle of the range
+input bool   InpRbUseHandOff        = true;        // InpRbUseHandOff - After TP1, trail the trade when price breaks out of the range (needs InpRbUseTp2)
+input double InpRbHandOffBreakAtr   = 0.2;         // InpRbHandOffBreakAtr - A bar must close this far outside the range (x ATR)
+input bool   InpRbHandOffRequireTrend = false;     // InpRbHandOffRequireTrend - Hand-off also needs the regime to be TREND in the same direction
+input int    InpRbChandelierPeriod  = 22;          // InpRbChandelierPeriod - Chandelier period (highest high / lowest low and ATR)
+input double InpRbChandelierMult    = 3.0;         // InpRbChandelierMult - Chandelier multiplier (x ATR)
+input double InpRbTrailStepAtr      = 0.1;         // InpRbTrailStepAtr - Minimum SL improvement per trailing move (x ATR)
+input bool   InpRbUseRangeTimeout   = true;        // InpRbUseRangeTimeout - Close the trade if the range does not break after TP1
+input int    InpRbRangeTimeoutBars  = 24;          // InpRbRangeTimeoutBars - Bars after TP1 before the timeout closes the trade
+input ENUM_RB_TREND_SHIFT InpRbOnTrendShiftPreTp1 = RB_TS_KEEP;   // InpRbOnTrendShiftPreTp1 - Action before TP1 when the regime turns TREND
+input bool   InpRbUseMaxHold        = false;       // InpRbUseMaxHold - Close trades held too long without reaching TP1
+input int    InpRbMaxHoldBars       = 48;          // InpRbMaxHoldBars - Maximum bars to hold before TP1
+#else
+input int    InpRbSignalWaitMinutes = 15;          // สัญญาณหมดอายุเมื่อรอเกินกี่นาที (0 = รอจนจบแท่ง)
+input double InpRbBeBufferAtr       = 0.1;         // SL ที่ทุนอยู่เลยราคาเข้าเท่านี้ (เท่าของ ATR ตอนเข้า)
+input bool   InpRbUseMidRangeBe     = false;       // เลื่อน SL ไปทุนเมื่อราคาผ่านกลางกรอบ
+input bool   InpRbUseHandOff        = true;        // หลัง TP1 ถ้าราคาเบรกกรอบ ให้ส่งต่อไปใช้ Trailing (ต้องเปิด InpRbUseTp2)
+input double InpRbHandOffBreakAtr   = 0.2;         // แท่งต้องปิดนอกกรอบอย่างน้อยเท่านี้ (เท่าของ ATR)
+input bool   InpRbHandOffRequireTrend = false;     // Hand-off ต้องรอ Regime เป็น TREND ทิศเดียวกันด้วย
+input int    InpRbChandelierPeriod  = 22;          // ช่วง Chandelier (High สูงสุด/Low ต่ำสุด และ ATR)
+input double InpRbChandelierMult    = 3.0;         // ตัวคูณ Chandelier (เท่าของ ATR)
+input double InpRbTrailStepAtr      = 0.1;         // ระยะที่ SL ต้องดีขึ้นอย่างน้อยต่อการเลื่อนหนึ่งครั้ง (เท่าของ ATR)
+input bool   InpRbUseRangeTimeout   = true;        // ผ่าน TP1 แล้วกรอบไม่เบรก ให้ปิดไม้
+input int    InpRbRangeTimeoutBars  = 24;          // จำนวนแท่งหลัง TP1 ก่อน Timeout ปิดไม้
+input ENUM_RB_TREND_SHIFT InpRbOnTrendShiftPreTp1 = RB_TS_KEEP;   // สิ่งที่ทำกับไม้ก่อน TP1 เมื่อตลาดเปลี่ยนเป็น TREND
+input bool   InpRbUseMaxHold        = false;       // ปิดไม้ที่ถือนานเกินไปโดยยังไม่ถึง TP1
+input int    InpRbMaxHoldBars       = 48;          // จำนวนแท่งสูงสุดที่ถือก่อนถึง TP1
+#endif
+
 #endif // RANGEBOT_INPUTS_MQH
