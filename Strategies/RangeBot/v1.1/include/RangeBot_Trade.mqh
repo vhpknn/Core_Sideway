@@ -307,7 +307,11 @@ bool RbMoveSlToBe(const string tag)
 void RbClosePlan(const string tag)
   {
    if(RawPositionClose(g_rbPlan.ticket, tag))
-      Print(CORE_LOG_PREFIX, " CLOSE ", tag, " #", g_rbPlan.ticket);
+     {
+      g_rbCooldownBar = iTime(_Symbol, InpRbEntryTF, 0);   // พักจนจบแท่งนี้
+      Print(CORE_LOG_PREFIX, " CLOSE ", tag, " #", g_rbPlan.ticket,
+            " | COOLDOWN จนจบแท่ง ", TimeToString(g_rbCooldownBar, TIME_DATE | TIME_MINUTES));
+     }
    else
       Print(CORE_LOG_PREFIX, " CLOSE ", tag, " ล้มเหลว #", g_rbPlan.ticket, " (จะลองใหม่แท่งถัดไป)");
   }

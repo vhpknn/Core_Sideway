@@ -40,6 +40,7 @@ string RbStateTag();
 
 SRbPlan  g_rbPlan;
 datetime g_rbLastOpenFail = 0;
+datetime g_rbCooldownBar  = 0;   // แท่ง EntryTF ที่ตัวจัดการปิดไม้ (ไม่เปิดไม้ใหม่จนจบแท่งนี้)
 
 void RbManagerReset()
   {
@@ -57,6 +58,7 @@ void RbManagerReset()
    g_rbPlan.midDone      = false;
    g_rbPlan.trendDone    = false;
    g_rbLastOpenFail      = 0;
+   g_rbCooldownBar       = 0;
   }
 
 ulong RbFindPositionTicket(const ENUM_POSITION_TYPE dir)
@@ -171,6 +173,16 @@ void RbTryExecuteSignal()
      {
       Print(CORE_LOG_PREFIX, " SIGNAL EXPIRED | รอเกิน ", InpRbSignalWaitMinutes,
             " นาที | เหตุผลล่าสุด=", (g_rbLastWhyLogged == "" ? "-" : g_rbLastWhyLogged));
+      g_rbSig.active = false;
+      return;
+     }
+
+   //--- พัก 1 แท่งหลังตัวจัดการปิดไม้ (MaxHold / Trend Shift CLOSE / Timeout)
+   if(g_rbCooldownBar > 0 && g_rbCooldownBar == iTime(_Symbol, InpRbEntryTF, 0))
+     {
+      Print(CORE_LOG_PREFIX, " SIGNAL DROPPED | COOLDOWN | ", g_rbSig.kind, " ",
+            (g_rbSig.dir == POSITION_TYPE_BUY ? "BUY" : "SELL"),
+            " | พัก 1 แท่งหลังปิดไม้");
       g_rbSig.active = false;
       return;
      }
