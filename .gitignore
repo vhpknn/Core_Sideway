@@ -1,0 +1,17 @@
+# ผลลัพธ์ชั่วคราวของเครื่องมือ
+tools/out/
+ai_bundle/
+Core_backup/
+**/Core_backup/
+
+# ไฟล์คอมไพล์และ Log
+*.ex5
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# สำรอง
+*.bak
+*.tmp

@@ -1,0 +1,8 @@
+template_version=0.1.1
+template_date=2026-11-20
+core_version=v1.1
+core_snapshot=Core/v1.1/include
+core_source_repo=vhpknn/EA_Platform_Core
+core_source_commit=30c3001eafe4db2a952f8bde247b003bbf2cc600
+core_files=19
+core_notes=v1.1 มี Core_Pending; ไม่มี Session Close และ InpCountExternalClose (D-30 อยู่ใน Core v1.0.1 เท่านั้น)

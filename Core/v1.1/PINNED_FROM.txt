@@ -1,0 +1,8 @@
+PINNED_FROM
+core_version=v1.1
+snapshot_of=Core/v1.1/include
+source_repo=vhpknn/EA_Platform_Core
+source_commit=30c3001eafe4db2a952f8bde247b003bbf2cc600
+pinned_date=2026-11-20
+files=19
+rule=อ่านอย่างเดียว ห้ามแก้ ถ้าต้องการ Core ใหม่ให้ใช้ tools/update_core.py
