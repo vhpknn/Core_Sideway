@@ -14,6 +14,7 @@
 | `run_checks` | รัน sync_core (ดูอย่างเดียว) + verify_core + check_docs แล้วรวมผลเป็นไฟล์เดียว | ทุกครั้งก่อน Commit และก่อนส่งผลให้ AI |
 | `make_ai_bundle` | รวมเอกสารและโค้ดเป็นชุดไฟล์สำหรับ AI ที่เข้า GitHub ไม่ได้ | เริ่มแชตกับ AI ในแต่ละเฟส |
 | `log_entry` | ช่วยเขียนรายการใน `docs/work/LOG.md` (ต่อท้ายอย่างเดียว) | ทุกครั้งที่จบชุดงาน |
+| `make_rangebot_sets` | สร้างไฟล์ `.set` ชุด Ablation 00 ถึง 10 ของ RangeBot ครบทุก Input (ค่าอยู่ในสคริปต์) ไม่ใส่ `--apply` = ดูแผนอย่างเดียว | เมื่อแก้ชุดค่าของ RangeBot (แล้วรัน `verify_core`) |
 
 ## 2. ลำดับประจำวัน
 - **ก่อน Commit:** บันทึกไฟล์ > คอมไพล์ EA 3 ตัว (0 errors 0 warnings) > `run_checks.bat` > ดูว่า verify_core ERROR 0 และ check_docs ERROR 0 > `log_entry` > Commit
