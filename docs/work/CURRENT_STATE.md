@@ -1,6 +1,6 @@
 # CURRENT STATE: RangeBot
 อัปเดต: 2026-11-22
-Commit ที่ Push แล้ว: 39fa93a (ชุด 1 ถึง 4; ชุด 5 ยังไม่ Commit)
+Commit ที่ Push แล้ว: 66a2e8d (ชุด 5)
 
 ## ตัวตนกลยุทธ์
 ชื่อ RangeBot | TAG RNG | ลำดับ EA 4 | Magic ฐาน 40000
