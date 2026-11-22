@@ -56,14 +56,142 @@ bool RbProtectNeutralized()
    return(ok);
   }
 
+//--- ตรวจค่า Input ของชุด 2 (Regime + Range)
+bool RbValidateInputs()
+  {
+   bool ok = true;
+
+   if(InpRbAtrPeriod < 1 || InpRbAdxPeriod < 1 || InpRbBbPeriod < 2 || InpRbBbwAvgPeriod < 1)
+     {
+      Alert(CORE_LOG_PREFIX, " ช่วง ATR/ADX/BB/BBW ต้องมากกว่า 0 (BB ตั้งแต่ 2)");
+      ok = false;
+     }
+
+   if(InpRbBbDev <= 0.0 || InpRbSqueezeFactor <= 0.0)
+     {
+      Alert(CORE_LOG_PREFIX, " BbDev และ SqueezeFactor ต้องมากกว่า 0");
+      ok = false;
+     }
+
+   if(InpRbAdxRisingBars < 0 || InpRbRegimeConfirmBars < 1)
+     {
+      Alert(CORE_LOG_PREFIX, " AdxRisingBars ต้องไม่ติดลบ และ RegimeConfirmBars ต้องอย่างน้อย 1");
+      ok = false;
+     }
+
+   if(InpRbAdxRangeMax <= 0.0 || InpRbAdxRangeMax >= InpRbAdxTrendMin)
+     {
+      Alert(CORE_LOG_PREFIX, " ต้องมี 0 < AdxRangeMax < AdxTrendMin");
+      ok = false;
+     }
+
+   if(InpRbEmaFast < 1 || InpRbEmaFast >= InpRbEmaMid || InpRbEmaMid >= InpRbEmaSlow)
+     {
+      Alert(CORE_LOG_PREFIX, " ต้องมี EmaFast < EmaMid < EmaSlow และ EmaFast >= 1");
+      ok = false;
+     }
+
+   if(InpRbRangeLookback < 5 || InpRbRangeExcludeBars < 0)
+     {
+      Alert(CORE_LOG_PREFIX, " RangeLookback ต้องอย่างน้อย 5 และ ExcludeBars ต้องไม่ติดลบ");
+      ok = false;
+     }
+
+   if(InpRbRangeMinHeightAtr <= 0.0 || InpRbRangeMinHeightAtr >= InpRbRangeMaxHeightAtr)
+     {
+      Alert(CORE_LOG_PREFIX, " ต้องมี 0 < RangeMinHeightAtr < RangeMaxHeightAtr");
+      ok = false;
+     }
+
+   if(InpRbRangeMinTouches < 1 || InpRbRangeMinTouches > InpRbRangeLookback
+      || InpRbRangeTouchTolAtr < 0.0)
+     {
+      Alert(CORE_LOG_PREFIX, " RangeMinTouches ต้องอยู่ระหว่าง 1 ถึง Lookback และ TouchTolAtr ต้องไม่ติดลบ");
+      ok = false;
+     }
+
+   return(ok);
+  }
+
+datetime g_rbLastBar = 0;   // เวลาเปิดของแท่ง EntryTF ที่ประมวลผลล่าสุด
+
+void RbOnDeinit()
+  {
+   RbRegimeDeinit();
+   RbRangeDeinit();
+  }
+
+//--- Log สรุปหนึ่งบรรทัดต่อแท่งใหม่
+void RbLogBar()
+  {
+   if(!InpRbLogBar)
+      return;
+
+   string box = "NOBOX(" + g_rbRange.reason + ")";
+
+   if(g_rbRange.valid && g_rbRange.atr > 0.0)
+      box = "BOX " + DoubleToString(g_rbRange.low, _Digits)
+            + "-" + DoubleToString(g_rbRange.high, _Digits)
+            + " H/ATR=" + DoubleToString(g_rbRange.height / g_rbRange.atr, 2)
+            + " T=" + IntegerToString(g_rbRange.touchHigh)
+            + "/" + IntegerToString(g_rbRange.touchLow)
+            + (g_rbRange.locked ? " LOCKED" : "");
+
+   Print(CORE_LOG_PREFIX, " BAR ", TimeToString(g_rbLastBar, TIME_DATE | TIME_MINUTES),
+         " | ", RbRegimeText(g_rbRegime), " (raw ", RbRegimeText(g_rbRegimeRaw), ")",
+         " | ADX=", DoubleToString(g_rbAdx, 1),
+         " BBWr=", DoubleToString(g_rbBbwRatio, 2),
+         " | ATR=", DoubleToString(g_rbRange.atr, _Digits),
+         " | ", box);
+  }
+
+//--- ชุด 2: อัปเดต Regime + Range เมื่อเกิดแท่งใหม่ ยังไม่มีการเปิดไม้
+void RbOnTick()
+  {
+   datetime bar = iTime(_Symbol, InpRbEntryTF, 0);
+
+   if(bar > 0 && (bar != g_rbLastBar || g_rbForceUpdate))
+     {
+      if(RbRegimeUpdate() && RbRangeUpdate(g_rbRegime))
+        {
+         g_rbLastBar     = bar;
+         g_rbForceUpdate = false;
+         RbDrawRange();
+         RbLogBar();
+        }
+      else
+        {
+         static datetime lastWarn = 0;
+
+         if(TimeLocal() - lastWarn >= 30)
+           {
+            lastWarn = TimeLocal();
+            Print(CORE_LOG_PREFIX, " รอข้อมูล Indicator/ราคา (จะลองใหม่ทุก Tick)");
+           }
+        }
+     }
+
+   g_gateReason = RbRegimeText(g_rbRegime) + (g_rbRange.valid ? " BOX" : " NOBOX");
+  }
+
 bool Strategy_Init()
   {
    if(!RbProtectNeutralized())
       return(false);
 
+   if(!RbValidateInputs())
+      return(false);
+
+   if(!RbRegimeInit() || !RbRangeInit())
+      return(false);
+
+   g_rbLastBar     = 0;
+   g_rbForceUpdate = false;
+
    Print(CORE_LOG_PREFIX, " Protect ของ Core ถูกปิดตามที่ RangeBot ต้องการ",
          " | CutLoss=", InpCutLossPoints, " pts",
-         " | AccountMode=", EnumToString(InpRbAccountMode));
+         " | AccountMode=", EnumToString(InpRbAccountMode),
+         " | EntryTF=", EnumToString(InpRbEntryTF));
 
    return(true);
   }
@@ -72,7 +200,7 @@ bool Strategy_Init()
 //--- ทุกทางเปิดใหม่ต้องเคารพ CoreIsPaused() และเรียก BeginBasketCycle() ก่อนเปิดรอบ
 void Strategy_OnTick()
   {
-   g_gateReason = "NO_STRATEGY";
+   RbOnTick();
   }
 
 void Strategy_CloseAll(string tag)
@@ -118,7 +246,7 @@ bool Strategy_ButtonDef(int index, SStrategyButton &def)
 void Strategy_OnButton(string id)
   {
    if(id == "RANGE_RESET")
-      Print(CORE_LOG_PREFIX, " ปุ่ม RESET RANGE ถูกกด (ยังไม่ทำงานจริงในชุด 1)");
+      RbRangeResetRequest();
    else if(id == "BE_NOW")
       Print(CORE_LOG_PREFIX, " ปุ่ม BE NOW ถูกกด (ยังไม่ทำงานจริงในชุด 1)");
   }
