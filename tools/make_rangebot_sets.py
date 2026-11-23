@@ -73,6 +73,7 @@ VARIANTS = [
     (8, "atrvol", {"InpRbUseAtrVolFilter": "true"}),
     (9, "handoff", {"InpRbUseHandOff": "true"}),
     (10, "bothedges", {"InpRbRangeDirection": "1"}),
+    (11, "trignone", {"InpRbTriggerType": "3"}),
 ]
 
 

@@ -14,7 +14,7 @@
 #define STRATEGY_TAG             "RNG"
 #define STRATEGY_EA_ORDINAL      4
 #define STRATEGY_MAGIC_BASE      40000
-#define STRATEGY_MAGIC_NEXT      40012
+#define STRATEGY_MAGIC_NEXT      40013
 #define STRATEGY_DEFAULT_COMMENT "RNG40000 H1 base"
 
 #define CORE_LOG_PREFIX          "RangeBot:"

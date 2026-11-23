@@ -33,4 +33,4 @@ TP1 และ Mid-range BE ตรวจทุก Tick ส่วน Hand-off, Tra
 InpMaxSpreadPoints=45 และ InpCutLossPoints=3000 ตรวจใหม่ถ้าเปลี่ยนโบรกเกอร์หรือสัญลักษณ์
 
 ## S-11 การทดสอบ Ablation
-รันชุด 00 ถึง 10 บน XAUUSD H1 ช่วง 2025.01.02 ถึง 2026.10.29 โหมด Every tick (จำลอง) เงินฝาก 1000 USD Execution delay ค่าคงที่ ผลเก็บใน docs/work/ABLATION_RESULTS.md ผลเป็น in-sample ต้องมี OOS และ Stress Test แยกก่อนสรุปชุดสุดท้าย
+รันชุด 00 ถึง 10 บน XAUUSD H1 ช่วง 2025.01.02 ถึง 2026.10.29 โหมด 1 minute OHLC เงินฝาก 1000 USD Execution delay ค่าคงที่ ตั้งใน Tester เท่านั้น (ไม่บันทึกใน .set): InpEnableReport=false (เกต Report ของ Core รอ 2 วินาทีตามเวลานาฬิกาจริง ทำให้ผลขึ้นกับความเร็ว Tester) และ InpAutoLot=false (ล็อต 0.01 คงที่ ตัดผลทบต้น) ชุดที่เลือกแล้วยืนยันซ้ำด้วย Every tick ผลเก็บใน docs/work/ABLATION_RESULTS.md ผลเป็น in-sample ต้องมี OOS และ Stress Test แยกก่อนสรุปชุดสุดท้าย
